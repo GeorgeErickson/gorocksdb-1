@@ -45,7 +45,7 @@ func NewDefaultReadOptionsSetupQuick(
 	verifyChecksums, fillCache, tailing bool, upperBound []byte, readaheadSize uint64, pinData bool) *ReadOptions {
 	var cUpperBound unsafe.Pointer
 	if upperBound != nil {
-		cUpperBound = C.CBytes(upperBound)
+		cUpperBound = unsafe.Pointer(C.CString(string(upperBound)))
 	}
 
 	return NewNativeReadOptions(C.rocksdb_readoptions_create_setup_quick(
