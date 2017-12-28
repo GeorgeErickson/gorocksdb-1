@@ -21,7 +21,7 @@ This is useful if you range over a large number of KVs and can give you a large 
 
 	readaheadByteSize := uint64(1024 * 1024)
 	readaheadCnt := uint64(1024)
-	iter := db.NewIterator(ro)
+	iter := db.NewIterator(readOptions)
 	goitr := NewGoBufferIteratorFromIterator(iter, readaheadByteSize, readaheadCnt, false, IteratorSortOrder_Asc)
 
 ```
@@ -73,12 +73,12 @@ You want to "combine" some topics and iterate through those by ascending event i
 
 	readaheadSize := uint64(1024 * 1024)
 	readaheadCnt := uint64(3)
-	prefixLen := uint64(8) // our Topic ID key part which always has to be 8 bytes here.
+	prefixLen := uint64(8)
 	multiitr = NewFixedPrefixedMultiIteratorFromIterators(readaheadSize, readaheadCnt, true, itrs, prefixLen)
 
 	for multiitr.Seek(seekKeys); multiitr.Valid(); multiitr.Next() {
 		k, v := multiitr.KeyValue()
-		itrIdx := multiitr.IteratorIndex() // which of the iterators in "itrs" provides k, v
+		itrIdx := multiitr.IteratorIndex() // describes which of the iterators in "itrs" provides k, v
 	}
 
 ```

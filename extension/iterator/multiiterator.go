@@ -19,6 +19,7 @@ const (
 )
 
 // MultiIterator is used to iterate with multiple iterators at once.
+// It currently only supports forward iteration.
 type MultiIterator struct {
 	c    *C.multiiterator_t
 	bbi  IndexedBaseBufferIterator
