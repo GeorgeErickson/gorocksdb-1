@@ -48,7 +48,7 @@ An example can be found [here](https://github.com/kapitan-k/gorocksdb/blob/maste
 
 
 The standard MultiIterator can be used for example:
-You have "topics" in your RocksDB which do store "events" and share a common suffix length.
+You have "topics" in your RocksDB which do store "events" and share a common suffix length. 
 i.e. 8bytes Topic ID, 8bytes Event ID (16 byte is the key).
 You want to "combine" some topics and iterate through those by ascending event id up to eventID9.
 
@@ -102,5 +102,5 @@ If you use the standard comparator (BytewiseComparator) all keys MUST have same 
 ## Examples
 [TopicEventMultiIterator](https://github.com/kapitan-k/gorocksdb/blob/master/extension/example/event.go).
 
-
+## Thanks
 Thanks to [gorocksdb](https://github.com/tecbot/gorocksdb) where this is forked from originally.
