@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/kapitan-k/gorocksdb.png)](https://travis-ci.org/kapitan-k/gorocksdb) [![GoDoc](https://godoc.org/github.com/kapitan-k/gorocksdb?status.png)](http://godoc.org/github.com/kapitan-k/gorocksdb)
 [![codecov](https://codecov.io/gh/kapitan-k/gorocksdb/branch/master/graph/badge.svg)](https://codecov.io/gh/kapitan-k/gorocksdb)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kapitan-k/gorocksdb)](https://goreportcard.com/report/github.com/kapitan-k/gorocksdb)
 
 ## Install
 
