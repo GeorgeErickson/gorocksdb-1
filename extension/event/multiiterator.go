@@ -7,7 +7,7 @@ import "C"
 
 import (
 	"github.com/kapitan-k/goerror"
-	. "github.com/kapitan-k/gorocksdb"
+	"github.com/kapitan-k/gorocksdb"
 	rocksitr "github.com/kapitan-k/gorocksdb/extension/iterator"
 	"github.com/kapitan-k/goutilities/event"
 	"unsafe"
@@ -21,7 +21,7 @@ import (
 type TopicEventMultiIterator struct {
 	*rocksitr.MultiIterator
 	topicIDs    []event.TopicID
-	readOptions []*ReadOptions
+	readOptions []*gorocksdb.ReadOptions
 }
 
 // NewTopicEventMultiIteratorInit allocates and initializes a
@@ -29,8 +29,8 @@ type TopicEventMultiIterator struct {
 // readOpts will be used for the underlying iterators but upper bound
 // is overwritten.
 func NewTopicEventMultiIteratorInit(
-	db *DB,
-	cfEvents *ColumnFamilyHandle,
+	db *gorocksdb.DB,
+	cfEvents *gorocksdb.ColumnFamilyHandle,
 	readaheadSize uint64,
 	readaheadCnt uint64,
 	upperBoundEventID event.EventID,
@@ -38,11 +38,11 @@ func NewTopicEventMultiIteratorInit(
 ) (tmitr *TopicEventMultiIterator, err error) {
 	l := len(topicIDs)
 
-	itrs := make([]*Iterator, l)
-	readOptions := make([]*ReadOptions, l)
+	itrs := make([]*gorocksdb.Iterator, l)
+	readOptions := make([]*gorocksdb.ReadOptions, l)
 
 	for i, topicID := range topicIDs {
-		ro := NewDefaultReadOptions()
+		ro := gorocksdb.NewDefaultReadOptions()
 		tek := event.TopicEventEventKey{}
 		tek.TopicID = topicID
 		tek.EventID = upperBoundEventID
@@ -54,7 +54,8 @@ func NewTopicEventMultiIteratorInit(
 	}
 
 	mitr := rocksitr.NewMultiIteratorFromIteratorsNativeUnsafe(
-		readaheadSize, readaheadCnt, true, itrs, unsafe.Pointer(nil), C.key_uint64_single_uint64_offs_cmp)
+		readaheadSize, readaheadCnt, true, itrs,
+		unsafe.Pointer(nil), C.key_uint64_single_uint64_offs_cmp)
 
 	return &TopicEventMultiIterator{
 		MultiIterator: mitr,

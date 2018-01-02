@@ -5,8 +5,8 @@ package iterator
 import "C"
 import (
 	"errors"
-	. "github.com/kapitan-k/goiterator"
-	. "github.com/kapitan-k/gorocksdb"
+	"github.com/kapitan-k/goiterator"
+	"github.com/kapitan-k/gorocksdb"
 	"unsafe"
 )
 
@@ -23,8 +23,8 @@ var ErrInvalidIteratorDirection = errors.New("Invalid iterator direction")
 // So if you know for example that you need >= readaheadCnt keys this iterator
 // is definitely faster than the normal iterator because the decreased count of cgo calls.
 type GoBufferIterator struct {
-	bbi BaseBufferIterator
-	itr *Iterator
+	bbi goiterator.BaseBufferIterator
+	itr *gorocksdb.Iterator
 }
 
 // NewGoBufferIteratorFromIterator allocates a new GoBufferIterator
@@ -33,16 +33,17 @@ type GoBufferIterator struct {
 // increased if a single key/value pair is too large for the current readahead buffer.
 // It now should keep ownership of the itr provided.
 func NewGoBufferIteratorFromIterator(
-	itr *Iterator, readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool,
-	order IteratorSortOrder,
+	itr *gorocksdb.Iterator, readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool,
+	order goiterator.IteratorSortOrder,
 ) (gitr *GoBufferIterator) {
 	gitr = &GoBufferIterator{
-		bbi: CreateBaseBufferIterator(readaheadSize, readaheadCnt, autoAdjustBufferSize),
+		bbi: goiterator.CreateBaseBufferIterator(
+			readaheadSize, readaheadCnt, autoAdjustBufferSize),
 		itr: itr,
 	}
 
-	if order == IteratorSortOrder_Natural {
-		order = IteratorSortOrder_Asc
+	if order == goiterator.IteratorSortOrder_Natural {
+		order = goiterator.IteratorSortOrder_Asc
 	}
 
 	gitr.bbi.Order = order
@@ -56,16 +57,17 @@ func NewGoBufferIteratorFromIterator(
 // increased if a single key/value pair is too large for the current readahead buffer.
 // The iterator itr should not be used elsewhere from now.
 func NewGoBufferIteratorFromIteratorWithBuffer(
-	itr *Iterator, readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool, buf []byte,
-	order IteratorSortOrder,
+	itr *gorocksdb.Iterator, readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool, buf []byte,
+	order goiterator.IteratorSortOrder,
 ) (gitr *GoBufferIterator) {
 	gitr = &GoBufferIterator{
-		bbi: CreateBaseBufferIteratorWithBuffer(readaheadSize, readaheadCnt, autoAdjustBufferSize, buf),
+		bbi: goiterator.CreateBaseBufferIteratorWithBuffer(
+			readaheadSize, readaheadCnt, autoAdjustBufferSize, buf),
 		itr: itr,
 	}
 
-	if order == IteratorSortOrder_Natural {
-		order = IteratorSortOrder_Asc
+	if order == goiterator.IteratorSortOrder_Natural {
+		order = goiterator.IteratorSortOrder_Asc
 	}
 
 	gitr.bbi.Order = order
@@ -74,7 +76,7 @@ func NewGoBufferIteratorFromIteratorWithBuffer(
 }
 
 // UnderlyingItr returns the underlying Iterator.
-func (gbi *GoBufferIterator) UnderlyingItr() *Iterator {
+func (gbi *GoBufferIterator) UnderlyingItr() *gorocksdb.Iterator {
 	return gbi.itr
 }
 
@@ -129,7 +131,7 @@ func (gbi *GoBufferIterator) fillReadahead() {
 // Must not be called if Valid is false.
 func (gbi *GoBufferIterator) Next() {
 	pbbi := &gbi.bbi
-	if pbbi.Order != IteratorSortOrder_Asc {
+	if pbbi.Order != goiterator.IteratorSortOrder_Asc {
 		pbbi.SetErr(ErrInvalidIteratorDirection)
 		return
 	}
@@ -140,7 +142,7 @@ func (gbi *GoBufferIterator) Next() {
 // Must not be called if Valid is false.
 func (gbi *GoBufferIterator) Prev() {
 	pbbi := &gbi.bbi
-	if pbbi.Order != IteratorSortOrder_Desc {
+	if pbbi.Order != goiterator.IteratorSortOrder_Desc {
 		pbbi.SetErr(ErrInvalidIteratorDirection)
 		return
 	}
@@ -235,9 +237,10 @@ func (gbi *GoBufferIterator) Err() (err error) {
 
 // SetIteratorSortOrder sets the sort order and may reset
 // and updates the readahead buffer. Err() should be checked afterwards.
-func (gbi *GoBufferIterator) SetIteratorSortOrder(order IteratorSortOrder) {
+func (gbi *GoBufferIterator) SetIteratorSortOrder(order goiterator.IteratorSortOrder) {
 	pbbi := &gbi.bbi
-	if pbbi.Order != IteratorSortOrder_Natural && pbbi.Order != order {
+	if pbbi.Order != goiterator.IteratorSortOrder_Natural &&
+		pbbi.Order != order {
 		pbbi.Reset()
 		pbbi.Order = order
 		gbi.fillReadahead()
@@ -246,16 +249,25 @@ func (gbi *GoBufferIterator) SetIteratorSortOrder(order IteratorSortOrder) {
 }
 
 // NextTo iterates with Next() up to readaheadSize or readaheadCnt and fills data into buf.
-func (gbi *GoBufferIterator) NextTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+func (gbi *GoBufferIterator) NextTo(
+	buf goiterator.PositionedDataBuffer,
+	readaheadSize, readaheadCnt uint64,
+	order goiterator.IteratorSortOrder) {
 	gbi.to(buf, readaheadSize, readaheadCnt, order)
 }
 
 // PrevTo iterates with Prev() up to readaheadSize or readaheadCnt and fills data into buf.
-func (gbi *GoBufferIterator) PrevTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+func (gbi *GoBufferIterator) PrevTo(
+	buf goiterator.PositionedDataBuffer,
+	readaheadSize, readaheadCnt uint64,
+	order goiterator.IteratorSortOrder) {
 	gbi.to(buf, readaheadSize, readaheadCnt, order)
 }
 
-func (gbi *GoBufferIterator) to(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+func (gbi *GoBufferIterator) to(
+	buf goiterator.PositionedDataBuffer,
+	readaheadSize, readaheadCnt uint64,
+	order goiterator.IteratorSortOrder) {
 	gbi.bbi.SetReadahead(readaheadSize, readaheadCnt)
 	// Valid() if returns true has filled the readahead buffer
 	isValid := gbi.Valid()
