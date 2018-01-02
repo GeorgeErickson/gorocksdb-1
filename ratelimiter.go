@@ -4,7 +4,7 @@ package gorocksdb
 // #include "rocksdb/c.h"
 import "C"
 
-// RateLimiter, is used to control write rate of flush and
+// RateLimiter is used to control write rate of flush and
 // compaction.
 type RateLimiter struct {
 	c *C.rocksdb_ratelimiter_t
@@ -25,7 +25,7 @@ func NewNativeRateLimiter(c *C.rocksdb_ratelimiter_t) *RateLimiter {
 }
 
 // Destroy deallocates the RateLimiter object.
-func (self *RateLimiter) Destroy() {
-	C.rocksdb_ratelimiter_destroy(self.c)
-	self.c = nil
+func (rl *RateLimiter) Destroy() {
+	C.rocksdb_ratelimiter_destroy(rl.c)
+	rl.c = nil
 }

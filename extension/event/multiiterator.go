@@ -76,14 +76,18 @@ func (tmitr *TopicEventMultiIterator) seekEventIDBase(
 	fnSeek(keys)
 }
 
+// Seek moves the iterator to the position greater than or equal to the eventID.
 func (tmitr *TopicEventMultiIterator) SeekEventID(eventID event.EventID) {
 	tmitr.seekEventIDBase(eventID, tmitr.MultiIterator.Seek)
 }
 
+// MultiIterator moves the iterator to the last key that less than or equal
+// to the eventID, in contrast with Seek.
 func (tmitr *TopicEventMultiIterator) SeekForPrevEventID(eventID event.EventID) {
 	tmitr.seekEventIDBase(eventID, tmitr.MultiIterator.SeekForPrev)
 }
 
+// Seek moves the iterator to the position greater than or equal to the key.
 func (tmitr *TopicEventMultiIterator) Seek(k []byte) {
 	if len(k) != event.TopicEventEventKeyByteSz {
 		tmitr.IndexedBaseBufferIterator().SetErr(goerror.ErrInvalidLength)
@@ -94,6 +98,8 @@ func (tmitr *TopicEventMultiIterator) Seek(k []byte) {
 	tmitr.SeekEventID(eventID)
 }
 
+// SeekForPrev moves the iterator to the last key that less than or equal
+// to the target key, in contrast with Seek.
 func (tmitr *TopicEventMultiIterator) SeekForPrev(k []byte) {
 	if len(k) != event.TopicEventEventKeyByteSz {
 		tmitr.IndexedBaseBufferIterator().SetErr(goerror.ErrInvalidLength)
@@ -111,7 +117,7 @@ func (tmitr *TopicEventMultiIterator) SeekToFirst() {
 	tmitr.SeekEventID(eventID)
 }
 
-// SeekToKast moves the iterator to the last key in the database.
+// SeekToLast moves the iterator to the last key in the database.
 func (tmitr *TopicEventMultiIterator) SeekToLast() {
 	tmitr.SeekEventID(event.EventIDMax)
 }

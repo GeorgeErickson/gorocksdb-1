@@ -370,6 +370,7 @@ func (mitr *MultiIterator) to(buf PositionedDataBuffer, readaheadSize, readahead
 	}
 }
 
+// IndexedBaseBufferIterator returns the underlying IndexedBaseBufferIterator.
 func (mitr *MultiIterator) IndexedBaseBufferIterator() *IndexedBaseBufferIterator {
 	return &mitr.bbi
 }

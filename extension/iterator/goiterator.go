@@ -10,7 +10,12 @@ import (
 	"unsafe"
 )
 
+// ErrReadaheadBufferTooSmall is returned if the readahead buffer
+// can not or is not allowed to be enlarged.
 var ErrReadaheadBufferTooSmall = errors.New("Readahead buffer too small")
+
+// ErrInvalidIteratorDirection is returned if the seek type or Next()/Prev()
+// does not suit the used direction.
 var ErrInvalidIteratorDirection = errors.New("Invalid iterator direction")
 
 // GoBufferIterator is a wrapper to the RocksDB Iterator which is optimized for
@@ -228,6 +233,8 @@ func (gbi *GoBufferIterator) Err() (err error) {
 	return gbi.bbi.Err()
 }
 
+// SetIteratorSortOrder sets the sort order and may reset
+// and updates the readahead buffer. Err() should be checked afterwards.
 func (gbi *GoBufferIterator) SetIteratorSortOrder(order IteratorSortOrder) {
 	pbbi := &gbi.bbi
 	if pbbi.Order != IteratorSortOrder_Natural && pbbi.Order != order {

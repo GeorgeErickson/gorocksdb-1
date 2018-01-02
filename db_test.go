@@ -462,8 +462,8 @@ func newTestDBCFsReadOnlyWrongOptsCnt(t *testing.T, name string, cfNames []strin
 	require.Error(t, err)
 }
 
-func newTestDBPathNames(t *testing.T, name string, names []string, target_sizes []uint64, applyOpts func(opts *Options)) *DB {
-	require.Equal(t, len(target_sizes), len(names))
+func newTestDBPathNames(t *testing.T, name string, names []string, targetSizes []uint64, applyOpts func(opts *Options)) *DB {
+	require.Equal(t, len(targetSizes), len(names))
 	require.NotEqual(t, len(names), 0)
 
 	dir, err := ioutil.TempDir("", "gorocksdb-"+name)
@@ -476,7 +476,7 @@ func newTestDBPathNames(t *testing.T, name string, names []string, target_sizes 
 		paths[i] = dir
 	}
 
-	dbpaths := NewDBPathsFromData(paths, target_sizes)
+	dbpaths := NewDBPathsFromData(paths, targetSizes)
 	defer DestroyDBPaths(dbpaths)
 
 	opts := NewDefaultOptions()
