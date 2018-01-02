@@ -76,12 +76,12 @@ func (tmitr *TopicEventMultiIterator) seekEventIDBase(
 	fnSeek(keys)
 }
 
-// Seek moves the iterator to the position greater than or equal to the eventID.
+// SeekEventID moves the iterator to the position greater than or equal to the eventID.
 func (tmitr *TopicEventMultiIterator) SeekEventID(eventID event.EventID) {
 	tmitr.seekEventIDBase(eventID, tmitr.MultiIterator.Seek)
 }
 
-// MultiIterator moves the iterator to the last key that less than or equal
+// SeekForPrevEventID moves the iterator to the last key that less than or equal
 // to the eventID, in contrast with Seek.
 func (tmitr *TopicEventMultiIterator) SeekForPrevEventID(eventID event.EventID) {
 	tmitr.seekEventIDBase(eventID, tmitr.MultiIterator.SeekForPrev)
