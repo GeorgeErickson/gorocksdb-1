@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/google/gofuzz"
 	"github.com/kapitan-k/goerror"
-	. "github.com/kapitan-k/gorocksdb"
+	"github.com/kapitan-k/gorocksdb"
 	"github.com/kapitan-k/gorocksdb/extension/comparator"
-	. "github.com/kapitan-k/gorocksdb/extension/event"
+	eventExt "github.com/kapitan-k/gorocksdb/extension/event"
 	"github.com/kapitan-k/goutilities/event"
 	"io/ioutil"
 	"log"
@@ -51,8 +51,8 @@ This is where the MultiIterator can be used.
 
 */
 
-var db *DB
-var cfMessagesTotal, cfMessagesPerTopic *ColumnFamilyHandle
+var db *gorocksdb.DB
+var cfMessagesTotal, cfMessagesPerTopic *gorocksdb.ColumnFamilyHandle
 
 var topicCnt = 300
 var eventPerTopicCnt = 30
@@ -80,7 +80,7 @@ func main() {
 		5, 6, 244,
 	}
 
-	mitr, err := NewTopicEventMultiIteratorInit(
+	mitr, err := eventExt.NewTopicEventMultiIteratorInit(
 		db, cfMessagesPerTopic, 1024, 10, event.EventIDMax, topicIDs)
 	goerror.PanicOnError(err)
 	defer mitr.Close()
@@ -114,13 +114,13 @@ func insert() {
 	var err error
 	f.NumElements(15, 300)
 
-	writeOptions := NewDefaultWriteOptions()
+	writeOptions := gorocksdb.NewDefaultWriteOptions()
 
 	// just a time
 	timeSecs := time.Now().UTC().Unix() - 100000
 
 	// single routine insert takes a while
-	batch := NewWriteBatch()
+	batch := gorocksdb.NewWriteBatch()
 	// lets insert 1000 topics with 10000 events each reverse
 	for i := topicCnt; i > 0; i-- {
 		topicID := event.TopicID(i)
@@ -142,7 +142,7 @@ func insert() {
 			key := ekey.Slice()
 
 			batch.PutVCFs(
-				[]*ColumnFamilyHandle{cfMessagesTotal, cfMessagesPerTopic},
+				[]*gorocksdb.ColumnFamilyHandle{cfMessagesTotal, cfMessagesPerTopic},
 				[][]byte{key, key}, [][]byte{{}, value})
 
 			time.Sleep(time.Microsecond)
@@ -157,15 +157,15 @@ func insert() {
 }
 
 func createDB(path string) (
-	db *DB,
-	cfMessagesTotal, cfMessagesPerTopic *ColumnFamilyHandle,
+	db *gorocksdb.DB,
+	cfMessagesTotal, cfMessagesPerTopic *gorocksdb.ColumnFamilyHandle,
 	err error,
 ) {
-	opts := NewDefaultOptions()
+	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
 	opts.SetCreateIfMissingColumnFamilies(true)
-	var cfs []*ColumnFamilyHandle
-	db, cfs, err = OpenDbColumnFamilies(
+	var cfs []*gorocksdb.ColumnFamilyHandle
+	db, cfs, err = gorocksdb.OpenDbColumnFamilies(
 		opts, path+"RocksEventExample",
 		[]string{"default", "cf_messages_total", "cf_messages_per_topic"},
 		createCFOpts())
@@ -176,15 +176,16 @@ func createDB(path string) (
 	return db, cfs[1], cfs[2], nil
 }
 
-func createCFOpts() []*Options {
+func createCFOpts() []*gorocksdb.Options {
 
-	optsTotal := NewDefaultOptions()
+	optsTotal := gorocksdb.NewDefaultOptions()
 	comparator.OptionsSetDoubleUint64Comparator(0, optsTotal)
 	//optsTotal.SetPrefixExtractor(NewFixedPrefixTransform(int(8)))
 
-	optsPerTopic := NewDefaultOptions()
+	optsPerTopic := gorocksdb.NewDefaultOptions()
 	comparator.OptionsSetDoubleUint64Comparator(0, optsPerTopic)
 	//optsPerTopic.SetPrefixExtractor(NewFixedPrefixTransform(int(8)))
 
-	return []*Options{NewDefaultOptions(), optsTotal, optsPerTopic}
+	return []*gorocksdb.Options{
+		gorocksdb.NewDefaultOptions(), optsTotal, optsPerTopic}
 }

@@ -7,7 +7,7 @@ package comparator
 import "C"
 
 import (
-	. "github.com/kapitan-k/gorocksdb"
+	"github.com/kapitan-k/gorocksdb"
 	"unsafe"
 )
 
@@ -17,7 +17,7 @@ import (
 // cmpPrefixByteOffset (in bytes).
 func OptionsSetSingleUint64Comparator(
 	cmpPrefixByteOffset uint64,
-	opts *Options,
+	opts *gorocksdb.Options,
 ) {
 	opts.SetComparatorUnsafe(
 		unsafe.Pointer(C.singleuint64comparator_new(
@@ -31,7 +31,7 @@ func OptionsSetSingleUint64Comparator(
 // cmpPrefixByteOffset (in bytes).
 func OptionsSetDoubleUint64Comparator(
 	cmpPrefixByteOffset uint64,
-	opts *Options,
+	opts *gorocksdb.Options,
 ) {
 	opts.SetComparatorUnsafe(
 		unsafe.Pointer(C.doubleuint64comparator_new(
@@ -45,7 +45,7 @@ func OptionsSetDoubleUint64Comparator(
 // cmpPrefixByteOffset (in bytes) in reverse order
 func OptionsSetReverseSingleUint64Comparator(
 	cmpPrefixByteOffset uint64,
-	opts *Options,
+	opts *gorocksdb.Options,
 ) {
 	opts.SetComparatorUnsafe(
 		unsafe.Pointer(C.reversesingleuint64comparator_new(

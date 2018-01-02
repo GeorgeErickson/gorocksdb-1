@@ -6,8 +6,8 @@ package iterator
 import "C"
 import (
 	"errors"
-	. "github.com/kapitan-k/goiterator"
-	. "github.com/kapitan-k/gorocksdb"
+	"github.com/kapitan-k/goiterator"
+	"github.com/kapitan-k/gorocksdb"
 	"unsafe"
 )
 
@@ -22,8 +22,8 @@ const (
 // It currently only supports forward iteration.
 type MultiIterator struct {
 	c    *C.multiiterator_t
-	bbi  IndexedBaseBufferIterator
-	itrs []*Iterator
+	bbi  goiterator.IndexedBaseBufferIterator
+	itrs []*gorocksdb.Iterator
 }
 
 // NewFixedSuffixMultiIteratorFromIterators returns a newly allocated MultiIterator.
@@ -33,7 +33,7 @@ type MultiIterator struct {
 // (for example the standard BytewiseComparator would ONLY need same key sizes here to work).
 func NewFixedSuffixMultiIteratorFromIterators(
 	readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool,
-	itrs []*Iterator, fixedSuffixLen uint64,
+	itrs []*gorocksdb.Iterator, fixedSuffixLen uint64,
 ) (mitr *MultiIterator) {
 	citrs := make([]*C.rocksdb_iterator_t, len(itrs))
 	for i, itr := range itrs {
@@ -47,8 +47,9 @@ func NewFixedSuffixMultiIteratorFromIterators(
 	C.multiiterator_set_cmp_fn_cmp_all_fixed_suffix(c)
 	C.multiiterator_set_keycmp_fn_key_memcmp(c)
 
-	bbi := CreateIndexedBaseBufferIterator(readaheadSize, readaheadCnt, autoAdjustBufferSize)
-	bbi.Order = IteratorSortOrder_Asc
+	bbi := goiterator.CreateIndexedBaseBufferIterator(
+		readaheadSize, readaheadCnt, autoAdjustBufferSize)
+	bbi.Order = goiterator.IteratorSortOrder_Asc
 
 	return &MultiIterator{
 		c:    c,
@@ -64,7 +65,7 @@ func NewFixedSuffixMultiIteratorFromIterators(
 // (for example the standard BytewiseComparator would ONLY need same key sizes here to work).
 func NewFixedPrefixMultiIteratorFromIterators(
 	readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool,
-	itrs []*Iterator, fixedSuffixLen uint64,
+	itrs []*gorocksdb.Iterator, fixedSuffixLen uint64,
 ) (mitr *MultiIterator) {
 	citrs := make([]*C.rocksdb_iterator_t, len(itrs))
 	for i, itr := range itrs {
@@ -78,8 +79,9 @@ func NewFixedPrefixMultiIteratorFromIterators(
 	C.multiiterator_set_cmp_fn_cmp_all_fixed_prefix(c)
 	C.multiiterator_set_keycmp_fn_key_memcmp(c)
 
-	bbi := CreateIndexedBaseBufferIterator(readaheadSize, readaheadCnt, autoAdjustBufferSize)
-	bbi.Order = IteratorSortOrder_Asc
+	bbi := goiterator.CreateIndexedBaseBufferIterator(
+		readaheadSize, readaheadCnt, autoAdjustBufferSize)
+	bbi.Order = goiterator.IteratorSortOrder_Asc
 
 	return &MultiIterator{
 		c:    c,
@@ -95,7 +97,7 @@ func NewFixedPrefixMultiIteratorFromIterators(
 // (for example the standard BytewiseComparator would ONLY need same key sizes here to work).
 func NewMultiIteratorFromIteratorsNativeUnsafe(
 	readaheadSize, readaheadCnt uint64, autoAdjustBufferSize bool,
-	itrs []*Iterator,
+	itrs []*gorocksdb.Iterator,
 	cIteratorCmpFn unsafe.Pointer,
 	cKeyCmpFn unsafe.Pointer,
 	configs ...func(mitr *MultiIterator),
@@ -122,8 +124,9 @@ func NewMultiIteratorFromIteratorsNativeUnsafe(
 		C.multiiterator_set_keycmp_fn_key_memcmp(c)
 	}
 
-	bbi := CreateIndexedBaseBufferIterator(readaheadSize, readaheadCnt, autoAdjustBufferSize)
-	bbi.Order = IteratorSortOrder_Asc
+	bbi := goiterator.CreateIndexedBaseBufferIterator(
+		readaheadSize, readaheadCnt, autoAdjustBufferSize)
+	bbi.Order = goiterator.IteratorSortOrder_Asc
 
 	mitr = &MultiIterator{
 		c:    c,
@@ -220,7 +223,7 @@ func (mitr *MultiIterator) seekBaseKeys(
 	pbbi := &mitr.bbi
 	var cErr *C.char
 	pbbi.Reset()
-	keysPtrs, keysSizes := ByteSlicesToUintptrsAndSizeTSlices(keys)
+	keysPtrs, keysSizes := gorocksdb.ByteSlicesToUintptrsAndSizeTSlices(keys)
 	fnCSeek(
 		mitr.c,
 		(**C.char)(unsafe.Pointer(&keysPtrs[0])),
@@ -293,7 +296,7 @@ func (mitr *MultiIterator) IteratorIndex() uint32 {
 // Must not be called if Valid is false.
 func (mitr *MultiIterator) Next() {
 	pbbi := &mitr.bbi
-	if pbbi.Order != IteratorSortOrder_Asc {
+	if pbbi.Order != goiterator.IteratorSortOrder_Asc {
 		pbbi.SetErr(ErrInvalidIteratorDirection)
 		return
 	}
@@ -347,16 +350,25 @@ func (mitr *MultiIterator) Close() {
 }
 
 // NextTo iterates with Next() up to readaheadSize or readaheadCnt and fills data into buf.
-func (mitr *MultiIterator) NextTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+func (mitr *MultiIterator) NextTo(
+	buf goiterator.PositionedDataBuffer,
+	readaheadSize, readaheadCnt uint64,
+	order goiterator.IteratorSortOrder) {
 	mitr.to(buf, readaheadSize, readaheadCnt, order)
 }
 
 // PrevTo iterates with Prev() up to readaheadSize or readaheadCnt and fills data into buf.
-func (mitr *MultiIterator) PrevTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+func (mitr *MultiIterator) PrevTo(
+	buf goiterator.PositionedDataBuffer,
+	readaheadSize, readaheadCnt uint64,
+	order goiterator.IteratorSortOrder) {
 	mitr.to(buf, readaheadSize, readaheadCnt, order)
 }
 
-func (mitr *MultiIterator) to(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+func (mitr *MultiIterator) to(
+	buf goiterator.PositionedDataBuffer,
+	readaheadSize, readaheadCnt uint64,
+	order goiterator.IteratorSortOrder) {
 	mitr.bbi.SetReadahead(readaheadSize, readaheadCnt)
 	// Valid() if returns true has filled the readahead buffer
 	isValid := mitr.Valid()
@@ -371,7 +383,7 @@ func (mitr *MultiIterator) to(buf PositionedDataBuffer, readaheadSize, readahead
 }
 
 // IndexedBaseBufferIterator returns the underlying IndexedBaseBufferIterator.
-func (mitr *MultiIterator) IndexedBaseBufferIterator() *IndexedBaseBufferIterator {
+func (mitr *MultiIterator) IndexedBaseBufferIterator() *goiterator.IndexedBaseBufferIterator {
 	return &mitr.bbi
 }
 
