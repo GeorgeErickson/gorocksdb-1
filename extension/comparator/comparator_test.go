@@ -115,12 +115,12 @@ func TestExtension(t *testing.T) {
 
 type DoubleUintPrefixKey [18]byte
 
-func (self *DoubleUintPrefixKey) KeyInfo() (prefix1, prefix2 byte, id1, id2 uint64) {
-	return KeyUInt64DoublePrefixedIDs(self[:])
+func (dk *DoubleUintPrefixKey) KeyInfo() (prefix1, prefix2 byte, id1, id2 uint64) {
+	return KeyUInt64DoublePrefixedIDs(dk[:])
 }
 
-func (self *DoubleUintPrefixKey) SetKeyInfo(prefix1, prefix2 byte, id1, id2 uint64) {
-	KeyUInt64DoublePrefixedToBuf(self[:], prefix1, prefix2, id1, id2)
+func (dk *DoubleUintPrefixKey) SetKeyInfo(prefix1, prefix2 byte, id1, id2 uint64) {
+	KeyUInt64DoublePrefixedToBuf(dk[:], prefix1, prefix2, id1, id2)
 }
 
 func KeyUInt64DoublePrefixedIDs(key []byte) (prefix1, prefix2 byte, id1, id2 uint64) {

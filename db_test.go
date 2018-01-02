@@ -199,14 +199,14 @@ func TestOpts(t *testing.T) {
 
 func TestDBCRUDDBPaths(t *testing.T) {
 	names := make([]string, 4)
-	target_sizes := make([]uint64, len(names))
+	targetSizes := make([]uint64, len(names))
 
 	for i := range names {
 		names[i] = "TestDBGet_" + strconv.FormatInt(int64(i), 10)
-		target_sizes[i] = uint64(1024 * 1024 * (i + 1))
+		targetSizes[i] = uint64(1024 * 1024 * (i + 1))
 	}
 
-	db := newTestDBPathNames(t, "TestDBGet", names, target_sizes, nil)
+	db := newTestDBPathNames(t, "TestDBGet", names, targetSizes, nil)
 	defer db.Close()
 
 	var (

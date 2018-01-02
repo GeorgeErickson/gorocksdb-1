@@ -24,7 +24,8 @@ type TopicEventMultiIterator struct {
 	readOptions []*ReadOptions
 }
 
-// NewTopicEventMultiIteratorInit.
+// NewTopicEventMultiIteratorInit allocates and initializes a
+// new TopicEventMultiIterator.
 // readOpts will be used for the underlying iterators but upper bound
 // is overwritten.
 func NewTopicEventMultiIteratorInit(
@@ -34,7 +35,7 @@ func NewTopicEventMultiIteratorInit(
 	readaheadCnt uint64,
 	upperBoundEventID event.EventID,
 	topicIDs []event.TopicID,
-) (self *TopicEventMultiIterator, err error) {
+) (tmitr *TopicEventMultiIterator, err error) {
 	l := len(topicIDs)
 
 	itrs := make([]*Iterator, l)
@@ -46,6 +47,7 @@ func NewTopicEventMultiIteratorInit(
 		tek.TopicID = topicID
 		tek.EventID = upperBoundEventID
 		ro.SetIterateUpperBound(tek.AsSlice())
+		ro.SetTailing(true)
 		itr := db.NewIteratorCF(ro, cfEvents)
 		itrs[i] = itr
 		readOptions[i] = ro
@@ -61,12 +63,12 @@ func NewTopicEventMultiIteratorInit(
 	}, nil
 }
 
-func (self *TopicEventMultiIterator) seekEventIDBase(
+func (tmitr *TopicEventMultiIterator) seekEventIDBase(
 	eventID event.EventID, fnSeek func(keys [][]byte)) {
-	keys := make([][]byte, len(self.topicIDs))
+	keys := make([][]byte, len(tmitr.topicIDs))
 	tek := event.TopicEventEventKey{}
 	tek.EventID = eventID
-	for i, topicID := range self.topicIDs {
+	for i, topicID := range tmitr.topicIDs {
 		tek.TopicID = topicID
 		keys[i] = tek.Slice()
 	}
@@ -74,68 +76,68 @@ func (self *TopicEventMultiIterator) seekEventIDBase(
 	fnSeek(keys)
 }
 
-func (self *TopicEventMultiIterator) SeekEventID(eventID event.EventID) {
-	self.seekEventIDBase(eventID, self.MultiIterator.Seek)
+func (tmitr *TopicEventMultiIterator) SeekEventID(eventID event.EventID) {
+	tmitr.seekEventIDBase(eventID, tmitr.MultiIterator.Seek)
 }
 
-func (self *TopicEventMultiIterator) SeekForPrevEventID(eventID event.EventID) {
-	self.seekEventIDBase(eventID, self.MultiIterator.SeekForPrev)
+func (tmitr *TopicEventMultiIterator) SeekForPrevEventID(eventID event.EventID) {
+	tmitr.seekEventIDBase(eventID, tmitr.MultiIterator.SeekForPrev)
 }
 
-func (self *TopicEventMultiIterator) Seek(k []byte) {
+func (tmitr *TopicEventMultiIterator) Seek(k []byte) {
 	if len(k) != event.TopicEventEventKeyByteSz {
-		self.IndexedBaseBufferIterator().SetErr(goerror.ErrInvalidLength)
+		tmitr.IndexedBaseBufferIterator().SetErr(goerror.ErrInvalidLength)
 		return
 	}
 	var eventID event.EventID
 	eventID.FromSlice(k)
-	self.SeekEventID(eventID)
+	tmitr.SeekEventID(eventID)
 }
 
-func (self *TopicEventMultiIterator) SeekForPrev(k []byte) {
+func (tmitr *TopicEventMultiIterator) SeekForPrev(k []byte) {
 	if len(k) != event.TopicEventEventKeyByteSz {
-		self.IndexedBaseBufferIterator().SetErr(goerror.ErrInvalidLength)
+		tmitr.IndexedBaseBufferIterator().SetErr(goerror.ErrInvalidLength)
 		return
 	}
 
 	var eventID event.EventID
 	eventID.FromSlice(k)
-	self.SeekForPrevEventID(eventID)
+	tmitr.SeekForPrevEventID(eventID)
 }
 
 // SeekToFirst moves the iterator to the first key in the database.
-func (self *TopicEventMultiIterator) SeekToFirst() {
+func (tmitr *TopicEventMultiIterator) SeekToFirst() {
 	var eventID event.EventID
-	self.SeekEventID(eventID)
+	tmitr.SeekEventID(eventID)
 }
 
 // SeekToKast moves the iterator to the last key in the database.
-func (self *TopicEventMultiIterator) SeekToLast() {
-	self.SeekEventID(event.EventIDMax)
+func (tmitr *TopicEventMultiIterator) SeekToLast() {
+	tmitr.SeekEventID(event.EventIDMax)
 }
 
 // EventKeyValue returns the key and the value the iterator currently holds.
 // Must not be called if Valid is false.
-func (self *TopicEventMultiIterator) EventKeyValue() (k event.TopicEventEventKey, v []byte) {
+func (tmitr *TopicEventMultiIterator) EventKeyValue() (k event.TopicEventEventKey, v []byte) {
 	var sk []byte
-	sk, v = self.MultiIterator.KeyValue()
+	sk, v = tmitr.MultiIterator.KeyValue()
 	k.FromSlice(sk)
 	return
 }
 
 // EventKey returns the key and the value the iterator currently holds.
 // Must not be called if Valid is false.
-func (self *TopicEventMultiIterator) EventKey() (k event.TopicEventEventKey) {
-	sk := self.MultiIterator.Key()
+func (tmitr *TopicEventMultiIterator) EventKey() (k event.TopicEventEventKey) {
+	sk := tmitr.MultiIterator.Key()
 	k.FromSlice(sk)
 	return
 }
 
 // Close closes the iterator and ALL underlying iterators.
 // The MultiIterator is no longer usable.
-func (self *TopicEventMultiIterator) Close() {
-	self.MultiIterator.Close()
-	for _, ro := range self.readOptions {
+func (tmitr *TopicEventMultiIterator) Close() {
+	tmitr.MultiIterator.Close()
+	for _, ro := range tmitr.readOptions {
 		ro.Destroy()
 	}
 }

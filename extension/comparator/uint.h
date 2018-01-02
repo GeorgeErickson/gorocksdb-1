@@ -1,9 +1,7 @@
 /*
 
-Comparators I often use within my code
-for example doubleuint64prefixcomparator_t:
-- 1 byte contextID
-- 1 byte contextID2
+Comparators
+for example doubleuint64comparator_t:
 - 8 byte topicID
 - 8 byte eventID
 

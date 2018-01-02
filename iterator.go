@@ -139,6 +139,7 @@ func (iter *Iterator) NextValidKeyValue() (bool, []byte, []byte) {
 	return true, charToByte(cKey, cKeyLen), charToByte(cVal, cValLen)
 }
 
+// SetBytesSliceHeader is a helper method to set the header of a slice.
 func SetBytesSliceHeader(pData *[]byte, ptr uintptr, len, cap int) {
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(pData))
 	sh.Data = ptr

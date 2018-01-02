@@ -68,24 +68,26 @@ func NewGoBufferIteratorFromIteratorWithBuffer(
 	return
 }
 
-func (self *GoBufferIterator) UnderlyingItr() *Iterator {
-	return self.itr
+// UnderlyingItr returns the underlying Iterator.
+func (gbi *GoBufferIterator) UnderlyingItr() *Iterator {
+	return gbi.itr
 }
 
-func (self *GoBufferIterator) Close() {
-	self.itr.Close()
+// Close closes the underlying Iterator.
+func (gbi *GoBufferIterator) Close() {
+	gbi.itr.Close()
 }
 
 // fillReadahead tries to get new data from the underlying iterator in the current direction.
-func (self *GoBufferIterator) fillReadahead() {
-	pbbi := &self.bbi
+func (gbi *GoBufferIterator) fillReadahead() {
+	pbbi := &gbi.bbi
 	pbbi.Reset()
 
 	var cErr *C.char
 	var csize, ccnt, cneeded, cvalid C.size_t
 
 	C.iter_valid_next_to_buffer(
-		(*C.rocksdb_iterator_t)(self.itr.UnsafeGetUnsafeIterator()),
+		(*C.rocksdb_iterator_t)(gbi.itr.UnsafeGetUnsafeIterator()),
 		C.int64_t(pbbi.Order),
 		(*C.char)(unsafe.Pointer(&pbbi.Buffer[0])),
 		C.size_t(pbbi.ReadaheadSize),
@@ -104,7 +106,7 @@ func (self *GoBufferIterator) fillReadahead() {
 	if ccnt == 0 && cneeded > 0 {
 		if pbbi.AutoAdjustBufferSize {
 			pbbi.SetReadaheadSize(uint64(cneeded))
-			self.fillReadahead()
+			gbi.fillReadahead()
 		} else {
 			pbbi.SetErr(ErrReadaheadBufferTooSmall)
 			return
@@ -120,8 +122,8 @@ func (self *GoBufferIterator) fillReadahead() {
 
 // Next moves the iterator to the next sequential key in the database.
 // Must not be called if Valid is false.
-func (self *GoBufferIterator) Next() {
-	pbbi := &self.bbi
+func (gbi *GoBufferIterator) Next() {
+	pbbi := &gbi.bbi
 	if pbbi.Order != IteratorSortOrder_Asc {
 		pbbi.SetErr(ErrInvalidIteratorDirection)
 		return
@@ -131,8 +133,8 @@ func (self *GoBufferIterator) Next() {
 
 // Prev moves the iterator to the previous sequential key in the database.
 // Must not be called if Valid is false.
-func (self *GoBufferIterator) Prev() {
-	pbbi := &self.bbi
+func (gbi *GoBufferIterator) Prev() {
+	pbbi := &gbi.bbi
 	if pbbi.Order != IteratorSortOrder_Desc {
 		pbbi.SetErr(ErrInvalidIteratorDirection)
 		return
@@ -141,121 +143,121 @@ func (self *GoBufferIterator) Prev() {
 }
 
 // SeekToFirst moves the iterator to the first key in the database.
-func (self *GoBufferIterator) SeekToFirst() {
-	self.bbi.Reset()
-	self.itr.SeekToFirst()
+func (gbi *GoBufferIterator) SeekToFirst() {
+	gbi.bbi.Reset()
+	gbi.itr.SeekToFirst()
 }
 
 // SeekToLast moves the iterator to the last key in the database.
-func (self *GoBufferIterator) SeekToLast() {
-	self.bbi.Reset()
-	self.itr.SeekToLast()
+func (gbi *GoBufferIterator) SeekToLast() {
+	gbi.bbi.Reset()
+	gbi.itr.SeekToLast()
 }
 
 // Seek moves the iterator to the position greater than or equal to the key.
-func (self *GoBufferIterator) Seek(k []byte) {
-	self.bbi.Reset()
-	self.itr.Seek(k)
+func (gbi *GoBufferIterator) Seek(k []byte) {
+	gbi.bbi.Reset()
+	gbi.itr.Seek(k)
 }
 
 // SeekForPrev moves the iterator to the last key that less than or equal
 // to the target key, in contrast with Seek.
-func (self *GoBufferIterator) SeekForPrev(k []byte) {
-	self.bbi.Reset()
-	self.itr.SeekForPrev(k)
+func (gbi *GoBufferIterator) SeekForPrev(k []byte) {
+	gbi.bbi.Reset()
+	gbi.itr.SeekForPrev(k)
 }
 
 // Key returns the key the iterator currently holds.
 // Must not be called if Valid is false.
-func (self *GoBufferIterator) Key() (k []byte) {
-	k, _ = self.bbi.KeyValue()
+func (gbi *GoBufferIterator) Key() (k []byte) {
+	k, _ = gbi.bbi.KeyValue()
 	return
 }
 
 // Value returns the value the iterator currently holds.
 // Must not be called if Valid is false.
-func (self *GoBufferIterator) Value() (v []byte) {
-	_, v = self.bbi.KeyValue()
+func (gbi *GoBufferIterator) Value() (v []byte) {
+	_, v = gbi.bbi.KeyValue()
 	return
 }
 
 // KeyValue returns the key and the value the iterator currently holds.
 // Must not be called if Valid is false.
-func (self *GoBufferIterator) KeyValue() (k, v []byte) {
-	return self.bbi.KeyValue()
+func (gbi *GoBufferIterator) KeyValue() (k, v []byte) {
+	return gbi.bbi.KeyValue()
 }
 
 // IteratorIndex returns the index of the iterator "element"
 // that currently provides Key(), Value(), KeyValue().
 // As the iterator has only one "element" it returns 0.
-func (self *GoBufferIterator) IteratorIndex() (idx uint32) {
+func (gbi *GoBufferIterator) IteratorIndex() (idx uint32) {
 	return 0
 }
 
-func (self *GoBufferIterator) innerValid() bool {
-	return self.bbi.InnerValid()
+func (gbi *GoBufferIterator) innerValid() bool {
+	return gbi.bbi.InnerValid()
 }
 
 // Valid returns false only when an Iterator has iterated past either the
 // first or the last key in the database.
-func (self *GoBufferIterator) Valid() bool {
-	pbbi := &self.bbi
+func (gbi *GoBufferIterator) Valid() bool {
+	pbbi := &gbi.bbi
 	if pbbi.Err() != nil {
 		return false
 	}
 
 	if pbbi.Cnt == 0 || pbbi.ReadPos == pbbi.Cnt {
-		self.fillReadahead()
+		gbi.fillReadahead()
 	}
-	return self.innerValid()
+	return gbi.innerValid()
 }
 
 // Reset resets the iterator to its defaults.
-func (self *GoBufferIterator) Reset() {
-	self.bbi.Reset()
+func (gbi *GoBufferIterator) Reset() {
+	gbi.bbi.Reset()
 }
 
 // Err returns nil if no errors happened during iteration, or the actual
 // error otherwise.
-func (self *GoBufferIterator) Err() (err error) {
-	err = self.bbi.Err()
+func (gbi *GoBufferIterator) Err() (err error) {
+	err = gbi.bbi.Err()
 	if err != nil {
 		return
 	}
-	self.bbi.SetErr(self.itr.Err())
-	return self.bbi.Err()
+	gbi.bbi.SetErr(gbi.itr.Err())
+	return gbi.bbi.Err()
 }
 
-func (self *GoBufferIterator) SetIteratorSortOrder(order IteratorSortOrder) {
-	pbbi := &self.bbi
+func (gbi *GoBufferIterator) SetIteratorSortOrder(order IteratorSortOrder) {
+	pbbi := &gbi.bbi
 	if pbbi.Order != IteratorSortOrder_Natural && pbbi.Order != order {
 		pbbi.Reset()
 		pbbi.Order = order
-		self.fillReadahead()
+		gbi.fillReadahead()
 		return
 	}
 }
 
 // NextTo iterates with Next() up to readaheadSize or readaheadCnt and fills data into buf.
-func (self *GoBufferIterator) NextTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
-	self.to(buf, readaheadSize, readaheadCnt, order)
+func (gbi *GoBufferIterator) NextTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+	gbi.to(buf, readaheadSize, readaheadCnt, order)
 }
 
 // PrevTo iterates with Prev() up to readaheadSize or readaheadCnt and fills data into buf.
-func (self *GoBufferIterator) PrevTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
-	self.to(buf, readaheadSize, readaheadCnt, order)
+func (gbi *GoBufferIterator) PrevTo(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+	gbi.to(buf, readaheadSize, readaheadCnt, order)
 }
 
-func (self *GoBufferIterator) to(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
-	self.bbi.SetReadahead(readaheadSize, readaheadCnt)
+func (gbi *GoBufferIterator) to(buf PositionedDataBuffer, readaheadSize, readaheadCnt uint64, order IteratorSortOrder) {
+	gbi.bbi.SetReadahead(readaheadSize, readaheadCnt)
 	// Valid() if returns true has filled the readahead buffer
-	isValid := self.Valid()
+	isValid := gbi.Valid()
 	if isValid {
-		err := self.bbi.ToPositionedDataBuffer(buf)
+		err := gbi.bbi.ToPositionedDataBuffer(buf)
 		if err != nil {
-			self.bbi.SetErr(err)
+			gbi.bbi.SetErr(err)
 			return
 		}
-		self.bbi.Reset()
+		gbi.bbi.Reset()
 	}
 }

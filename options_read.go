@@ -40,7 +40,7 @@ func NewNativeReadOptions(c *C.rocksdb_readoptions_t) *ReadOptions {
 	}
 }
 
-// NewDefaultReadOptionsSetup creates a default ReadOptions object.
+// NewDefaultReadOptionsSetupQuick creates a default ReadOptions object with the given parameters.
 func NewDefaultReadOptionsSetupQuick(
 	verifyChecksums, fillCache, tailing bool, upperBound []byte, readaheadSize uint64, pinData bool) *ReadOptions {
 	var cUpperBound unsafe.Pointer
