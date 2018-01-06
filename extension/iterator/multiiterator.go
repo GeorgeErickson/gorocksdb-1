@@ -20,6 +20,7 @@ const (
 
 // MultiIterator is used to iterate with multiple iterators at once.
 // It currently only supports forward iteration.
+// Values in RocksDB must be smaller that uint32_t max.
 type MultiIterator struct {
 	c    *C.multiiterator_t
 	bbi  goiterator.IndexedBaseBufferIterator
@@ -154,7 +155,7 @@ func (mitr *MultiIterator) fillReadahead() {
 		C.int64_t(pbbi.Order),
 		(*C.char)(unsafe.Pointer(&pbbi.Buffer[0])),
 		C.size_t(pbbi.ReadaheadSize),
-		(*C.size_t)(unsafe.Pointer(&pbbi.Lengths[0])),
+		(*C.uint32_t)(unsafe.Pointer(&pbbi.Lengths[0])),
 		(*C.uint32_t)(unsafe.Pointer(&pbbi.Indexes[0])),
 		C.size_t(pbbi.ReadaheadCnt),
 		&csize,

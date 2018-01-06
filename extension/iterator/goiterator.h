@@ -14,7 +14,7 @@ void iter_valid_next_to_buffer(
 	rocksdb_iterator_t* iter, 
 	const int64_t direction, 
 	char* buffer, size_t buffer_size, 
-	size_t* plengths, size_t max_cnt, size_t* psize, size_t* pcnt,
+	uint32_t* plengths, size_t max_cnt, size_t* psize, size_t* pcnt,
 	size_t* pneeded, size_t* pvalid, char** errptr);
 
 

@@ -55,7 +55,7 @@ void multiiterator_valid_next_to_buffer(
 	multiiterator_t* multi_iter,
 	const int64_t direction, 
 	char* buffer, size_t buffer_size, 
-	size_t* plengths, uint32_t* pindexes, size_t max_cnt, size_t* psize, size_t* pcnt, 
+	uint32_t* plengths, uint32_t* pindexes, size_t max_cnt, size_t* psize, size_t* pcnt, 
 	size_t* pneeded, size_t* pvalid, char** errptr);
 
 

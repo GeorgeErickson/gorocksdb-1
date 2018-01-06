@@ -22,6 +22,7 @@ var ErrInvalidIteratorDirection = errors.New("Invalid iterator direction")
 // sequential access on a given count of keys and/or a given total lengths of keys needed.
 // So if you know for example that you need >= readaheadCnt keys this iterator
 // is definitely faster than the normal iterator because the decreased count of cgo calls.
+// Values in RocksDB must be smaller that uint32_t max.
 type GoBufferIterator struct {
 	bbi goiterator.BaseBufferIterator
 	itr *gorocksdb.Iterator
@@ -98,7 +99,7 @@ func (gbi *GoBufferIterator) fillReadahead() {
 		C.int64_t(pbbi.Order),
 		(*C.char)(unsafe.Pointer(&pbbi.Buffer[0])),
 		C.size_t(pbbi.ReadaheadSize),
-		(*C.size_t)(unsafe.Pointer(&pbbi.Lengths[0])),
+		(*C.uint32_t)(unsafe.Pointer(&pbbi.Lengths[0])),
 		C.size_t(pbbi.ReadaheadCnt),
 		&csize,
 		&ccnt,

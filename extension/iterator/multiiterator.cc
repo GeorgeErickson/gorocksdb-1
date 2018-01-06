@@ -162,7 +162,7 @@ void multiiterator_valid_next_to_buffer(
 	multiiterator_t* multi_iter,
 	const int64_t direction, 
 	char* buffer, size_t buffer_size, 
-	size_t* plengths, uint32_t* pindexes, size_t max_cnt, size_t* psize, size_t* pcnt, 
+	uint32_t* plengths, uint32_t* pindexes, size_t max_cnt, size_t* psize, size_t* pcnt, 
 	size_t* pneeded, size_t* pvalid, char** errptr) {
 
 	size_t cnt = 0;
@@ -185,8 +185,8 @@ void multiiterator_valid_next_to_buffer(
 		bpos += value_len;
 
 		size_t plength_pos = cnt*2;
-		plengths[plength_pos] = key_len;
-		plengths[plength_pos+1] = value_len;
+		plengths[plength_pos] = (uint32_t)key_len;
+		plengths[plength_pos+1] = (uint32_t)value_len;
 
 		pindexes[cnt] = (uint32_t)multi_iter->current_iter_idx;
 		multiiterator_next_and_set_valid(multi_iter);

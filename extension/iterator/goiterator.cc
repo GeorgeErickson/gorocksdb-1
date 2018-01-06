@@ -12,7 +12,7 @@ extern "C" {
 void iter_valid_next_to_buffer(
 	rocksdb_iterator_t* iter, const int64_t direction, 
 	char* buffer, size_t buffer_size, 
-	size_t* plengths, size_t max_cnt, size_t* psize, size_t* pcnt, 
+	uint32_t* plengths, size_t max_cnt, size_t* psize, size_t* pcnt, 
 	size_t* pneeded,  size_t* pvalid, char** errptr) {
 
 	size_t cnt = 0;
@@ -43,8 +43,8 @@ void iter_valid_next_to_buffer(
 		bpos += value_len;
 
 		size_t plength_pos = cnt*2;
-		plengths[plength_pos] = key_len;
-		plengths[plength_pos+1] = value_len;
+		plengths[plength_pos] = (uint32_t)key_len;
+		plengths[plength_pos+1] = (uint32_t)value_len;
 
 		move_fn(iter);
 		valid = rocksdb_iter_valid(iter);
