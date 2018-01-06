@@ -24,8 +24,8 @@ const (
 // ReadOptions represent all of the available options when reading from a
 // database.
 type ReadOptions struct {
-	c           *C.rocksdb_readoptions_t
-	cUpperBound unsafe.Pointer
+	c          *C.rocksdb_readoptions_t
+	upperBound []byte
 }
 
 // NewDefaultReadOptions creates a default ReadOptions object.
@@ -43,16 +43,12 @@ func NewNativeReadOptions(c *C.rocksdb_readoptions_t) *ReadOptions {
 // NewDefaultReadOptionsSetupQuick creates a default ReadOptions object with the given parameters.
 func NewDefaultReadOptionsSetupQuick(
 	verifyChecksums, fillCache, tailing bool, upperBound []byte, readaheadSize uint64, pinData bool) *ReadOptions {
-	var cUpperBound unsafe.Pointer
-	if upperBound != nil {
-		cUpperBound = unsafe.Pointer(C.CString(string(upperBound)))
-	}
 
 	return NewNativeReadOptions(C.rocksdb_readoptions_create_setup_quick(
 		boolToChar(verifyChecksums),
 		boolToChar(fillCache),
 		boolToChar(tailing),
-		(*C.char)(cUpperBound),
+		byteToChar(upperBound),
 		C.size_t(len(upperBound)),
 		C.size_t(readaheadSize),
 		boolToChar(pinData),
@@ -115,24 +111,15 @@ func (opts *ReadOptions) SetTailing(value bool) {
 // There is no lower bound on the iterator. If needed, that can be easily
 // implemented.
 // Default: nullptr
-// if len(key) > 0 a upper bound is allocated in C and so opts
-// must be destroyed when no longer used.
-// you should not call SetIterateUpperBound when these options
-// are used for an open Iterator.
-func (opts *ReadOptions) SetIterateUpperBound(key []byte) {
-	var cUpperBound unsafe.Pointer
-	if opts.cUpperBound != nil {
-		C.free(opts.cUpperBound)
-	}
-
-	if len(key) > 0 {
-		cUpperBound = unsafe.Pointer(C.CString(string(key)))
-	}
-
-	cKeyLen := C.size_t(len(key))
-	C.rocksdb_readoptions_set_iterate_upper_bound(opts.c, (*C.char)(cUpperBound), cKeyLen)
+// If you set an upper bound and keep your Iterator open, you
+// must take care that you do hold a reference to the ReadOptions.
+// Otherwise the upperBound might get garbage collected and the Iterator
+// might not work as expected.
+func (opts *ReadOptions) SetIterateUpperBound(upperBound []byte) {
+	cKeyLen := C.size_t(len(upperBound))
+	C.rocksdb_readoptions_set_iterate_upper_bound(opts.c, byteToChar(upperBound), cKeyLen)
 	// Hold onto a reference so it doesn't get garbaged collected out from under us.
-	opts.cUpperBound = cUpperBound
+	opts.upperBound = upperBound
 }
 
 // SetReadaheadSize sets the read ahead size for new iterators.
@@ -169,9 +156,6 @@ func (opts *ReadOptions) SetPinData(value bool) {
 // Destroy deallocates the ReadOptions object.
 func (opts *ReadOptions) Destroy() {
 	C.rocksdb_readoptions_destroy(opts.c)
+	opts.upperBound = nil
 	opts.c = nil
-	if opts.cUpperBound != nil {
-		C.free(opts.cUpperBound)
-		opts.cUpperBound = nil
-	}
 }
