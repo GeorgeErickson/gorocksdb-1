@@ -11,13 +11,6 @@ import (
 	"unsafe"
 )
 
-type ComarisonType int
-
-const (
-	ComparisonType_FixedPrefixLen = 1
-	ComparisonType_FixedSuffixLen = 2
-)
-
 // MultiIterator is used to iterate with multiple iterators at once.
 // It currently only supports forward iteration.
 // Values in RocksDB must be smaller that uint32_t max.
